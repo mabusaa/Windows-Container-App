@@ -1,0 +1,49 @@
+﻿apiVersion: v1
+data:
+  .dockerconfigjson: ewoJImF1dGhzIjogewoJCSJ0YnNhemRldmFjci5henVyZWNyLmlvIjogewoJCQkiYXV0aCI6ICJWRUpUUVZwRVJWWkJRMUk2WjBKWU1rc3dPRmMyTVQxdlJtdENNMHR5YVVseFBWbFdQVXB4VGtvNVNEST0iCgkJfQoJfSwKCSJIdHRwSGVhZGVycyI6IHsKCQkiVXNlci1BZ2VudCI6ICJEb2NrZXItQ2xpZW50LzE5LjAzLjEyIChsaW51eCkiCgl9Cn0=
+kind: Secret
+metadata:
+  name: acr-secret
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
+  name: sample-app
+  labels:
+    app: sample-app
+spec:
+  ports:
+    # the port that this service should serve on
+    - port: 80
+      targetPort: 80
+  selector:
+    app: sample-app
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-app
+  name: sample-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+      name: sample-app
+    spec:
+     imagePullSecrets:
+      - name: acr-secret
+     containers:
+      - name: sample-app
+        image: tbsazdevacr.azurecr.io/netframeworksample:v3
+     nodeSelector:
+      kubernetes.io/os: windows
